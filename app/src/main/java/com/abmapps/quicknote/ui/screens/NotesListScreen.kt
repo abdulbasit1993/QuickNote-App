@@ -91,7 +91,7 @@ fun NotesListScreen(
                         NoteCard(
                             note = note,
                             onClick = { onNoteClick(note.id) },
-                            onTogglePin = { viewModel.togglePin(note.id) }
+                            onTogglePin = { viewModel.togglePin(note.id, note.isPinned) }
                         )
                     }
                 }

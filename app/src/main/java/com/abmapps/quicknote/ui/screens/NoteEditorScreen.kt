@@ -20,8 +20,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.abmapps.quicknote.model.Note
 import com.abmapps.quicknote.model.NoteColors
 import com.abmapps.quicknote.viewmodel.NoteViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,12 +32,26 @@ fun NoteEditorScreen(
     viewModel: NoteViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val existingNote = remember(noteId) { noteId?.let { viewModel.getNoteById(it) } }
+    val coroutineScope = rememberCoroutineScope()
 
-    var title by remember { mutableStateOf(existingNote?.title ?: "") }
-    var content by remember { mutableStateOf(existingNote?.content ?: "") }
-    var selectedColor by remember { mutableLongStateOf(existingNote?.colorValue ?: NoteColors[0]) }
-    var isPinned by remember { mutableStateOf(existingNote?.isPinned ?: false) }
+    var existingNote by remember { mutableStateOf<Note?>(null) }
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    var selectedColor by remember { mutableLongStateOf(NoteColors[0]) }
+    var isPinned by remember { mutableStateOf(false)}
+
+    LaunchedEffect(noteId) {
+        if (noteId != null) {
+            val note = viewModel.getNoteById(noteId)
+            if (note != null) {
+                existingNote = note
+                title = note.title
+                content = note.content
+                selectedColor = note.colorValue
+                isPinned = note.isPinned
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Color(selectedColor),
@@ -61,8 +77,10 @@ fun NoteEditorScreen(
                     }
                     if (existingNote != null) {
                         IconButton(onClick = {
-                            viewModel.deleteNote(existingNote.id)
-                            onNavigateBack()
+                            existingNote?.let {
+                                viewModel.deleteNote(it.id)
+                                onNavigateBack()
+                            }
                         }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete note")
                         }
